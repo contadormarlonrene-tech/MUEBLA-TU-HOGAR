@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Contable — Muebla Trimestre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f4f1ec;
+    --bg2: #eceae4;
+    --bg3: #ffffff;
+    --text: #1a1916;
+    --text2: #6b6860;
+    --text3: #9a9890;
+    --accent: #2a4d3e;
+    --accent2: #3d7a5f;
+    --accent-light: #d4ead8;
+    --red: #c0392b;
+    --red-light: #fde8e6;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --blue: #1e4da1;
+    --blue-light: #dbeafe;
+    --border: rgba(0,0,0,0.08);
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 230px;
+    background: var(--accent);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+  .sidebar-logo p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.15s;
+    border: none; background: none; text-align: left; width: 100%;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.14); color: #fff; font-weight: 500; }
+  .nav-item .icon { font-size: 16px; opacity: 0.8; }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* MAIN */
+  .main { margin-left: 230px; padding: 32px 36px; min-height: 100vh; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 { font-size: 26px; font-weight: 500; color: var(--text); }
+  .page-header p { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+  /* METRIC CARDS */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .metric-card {
+    background: var(--bg3);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s;
+  }
+  .metric-card:hover { box-shadow: var(--shadow); }
+  .metric-card .mc-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .metric-card .mc-value { font-size: 28px; font-weight: 500; font-family: 'DM Mono', monospace; }
+  .metric-card .mc-sub { font-size: 12px; color: var(--text2); margin-top: 5px; }
+  .mc-green { color: #166534; }
+  .mc-red { color: var(--red); }
+  .mc-amber { color: var(--amber); }
+  .mc-dark { color: var(--text); }
+
+  /* CARDS */
+  .card {
+    background: var(--bg3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 18px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* MONTH TABS */
+  .month-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 18px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab-btn:hover { border-color: var(--accent2); color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg); }
+  .data-table .amt { font-family: 'DM Mono', monospace; text-align: right; }
+  .data-table .pos { color: #166534; }
+  .data-table .neg { color: var(--red); }
+
+  /* BAR INLINE */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { font-size: 12px; color: var(--text2); min-width: 170px; }
+  .bar-track { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+  .bar-val { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2); min-width: 70px; text-align: right; }
+
+  /* ALERT */
+  .alert { display: flex; gap: 12px; border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; align-items: flex-start; }
+  .alert-danger { background: var(--red-light); border: 1px solid rgba(192,57,43,0.2); }
+  .alert-warning { background: var(--amber-light); border: 1px solid rgba(180,83,9,0.2); }
+  .alert-info { background: var(--blue-light); border: 1px solid rgba(30,77,161,0.2); }
+  .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .alert-text { font-size: 13px; line-height: 1.6; }
+  .alert-text strong { display: block; margin-bottom: 2px; font-weight: 600; }
+  .alert-danger .alert-text { color: var(--red); }
+  .alert-warning .alert-text { color: var(--amber); }
+  .alert-info .alert-text { color: var(--blue); }
+
+  /* PROGRESS MONTH */
+  .month-card {
+    background: var(--bg3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .month-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .month-card.m-ok::before { background: #16a34a; }
+  .month-card.m-bad::before { background: var(--red); }
+
+  .month-card h3 { font-size: 16px; font-weight: 500; margin-bottom: 14px; }
+  .month-stat { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .month-stat span:first-child { color: var(--text2); }
+  .month-stat span:last-child { font-family: 'DM Mono', monospace; font-weight: 500; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-red { background: var(--red-light); color: var(--red); }
+
+  /* SEARCH */
+  .search-box { position: relative; margin-bottom: 16px; }
+  .search-box input {
+    width: 100%; padding: 10px 16px 10px 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    background: var(--bg3);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box input:focus { border-color: var(--accent2); }
+  .search-box .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+
+  /* CHART CONTAINER */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* POLLOS TABLE */
+  .pollos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+  /* TOOLTIP CUSTOM */
+  .legend-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg2); border-radius: 3px; }
+
+  /* HAMBURGER */
+  .hamburger { display: none; position: fixed; top: 18px; left: 18px; z-index: 200; background: var(--accent); border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; color: #fff; font-size: 18px; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-230px); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 80px 20px 32px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .hamburger { display: block; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ANIMATE */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .page.active { animation: fadeUp 0.3s ease; }
+
+  /* PRINT */
+  .print-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    font-size: 13px; cursor: pointer; color: var(--text2);
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    text-decoration: none;
+  }
+  .print-btn:hover { background: var(--bg2); color: var(--text); }
+
+  .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+</style>
+</head>
+<body>
+
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h1>Muebla<br>Análisis</h1>
+    <p>Trimestre Mar–May 2025</p>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('resumen', this)">
+      <span class="icon">📊</span> Resumen ejecutivo
+    </button>
+    <button class="nav-item" onclick="showPage('mensual', this)">
+      <span class="icon">📅</span> Análisis mensual
+    </button>
+    <button class="nav-item" onclick="showPage('costos', this)">
+      <span class="icon">⚙️</span> Costos y gastos
+    </button>
+    <button class="nav-item" onclick="showPage('ingresos', this)">
+      <span class="icon">💰</span> Ingresos
+    </button>
+    <button class="nav-item" onclick="showPage('cartera', this)">
+      <span class="icon">👥</span> Cartera por cobrar
+    </button>
+    <button class="nav-item" onclick="showPage('transacciones', this)">
+      <span class="icon">📋</span> Transacciones
+    </button>
+    <button class="nav-item" onclick="showPage('alertas', this)">
+      <span class="icon">⚠️</span> Alertas contables
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    1,055 transacciones<br>
+    Mar – May 2025
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- ===== RESUMEN ===== -->
+  <div class="page active" id="page-resumen">
+    <div class="header-row">
+      <div class="page-header" style="margin-bottom:0">
+        <h2>Resumen ejecutivo</h2>
+        <p>Período: Marzo, Abril y Mayo 2025 · 1,055 transacciones registradas</p>
+      </div>
+      <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="mc-label">Ingresos totales</div>
+        <div class="mc-value mc-dark">$63.0M</div>
+        <div class="mc-sub">COP acumulado</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Egresos totales</div>
+        <div class="mc-value mc-dark">$58.2M</div>
+        <div class="mc-sub">Costos + Gastos</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Utilidad neta</div>
+        <div class="mc-value mc-green">+$4.83M</div>
+        <div class="mc-sub">Margen: 7.7%</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Cartera pendiente</div>
+        <div class="mc-value mc-amber">$10.7M</div>
+        <div class="mc-sub">16 deudores activos</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Ingresos vs egresos por mes</div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#3d7a5f"></div>Ingresos</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div>Egresos</div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartResumen" role="img" aria-label="Ingresos vs egresos por mes"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Composición de egresos</div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#2a4d3e"></div>Costos directos 30.5%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#b45309"></div>Nómina 19.1%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div>Otros gastos 50.4%</div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartComposicion" role="img" aria-label="Composición de egresos"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Utilidad mensual</div>
+      <div class="chart-wrap" style="height:180px">
+        <canvas id="chartUtilidad" role="img" aria-label="Utilidad mensual"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Distribución por medio de pago</div>
+      <div class="grid-2">
+        <div>
+          <div class="bar-row">
+            <div class="bar-label">Bancolombia</div>
+            <div class="bar-track"><div class="bar-fill" style="width:58%;background:#2a4d3e"></div></div>
+            <div class="bar-val">$36.7M</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Efectivo</div>
+            <div class="bar-track"><div class="bar-fill" style="width:42%;background:#6aaa84"></div></div>
+            <div class="bar-val">$26.4M</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);padding:8px 0;line-height:1.8">
+          <p>💳 <strong style="color:var(--text)">58%</strong> de los flujos pasan por Bancolombia</p>
+          <p>💵 <strong style="color:var(--text)">42%</strong> se maneja en efectivo</p>
+          <p>⚠️ Alta proporción de efectivo puede dificultar la trazabilidad ante la DIAN</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MENSUAL ===== -->
+  <div class="page" id="page-mensual">
+    <div class="page-header">
+      <h2>Análisis mensual</h2>
+      <p>Comparativo detallado por mes del período</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+      <div class="month-card m-ok">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3>Marzo</h3>
+          <span class="badge badge-green">▲ Superávit</span>
+        </div>
+        <div class="month-stat"><span>Ingresos</span><span style="color:#166534">$18,956,070</span></div>
+        <div class="month-stat"><span>Costos</span><span>$3,531,580</span></div>
+        <div class="month-stat"><span>Gastos</span><span>$10,962,469</span></div>
+        <div class="sep" style="margin:10px 0"></div>
+        <div class="month-stat"><span><strong>Utilidad</strong></span><span style="color:#166534;font-family:'DM Mono',monospace"><strong>+$4,462,021</strong></span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">Margen: 23.5%</div>
+      </div>
+      <div class="month-card m-bad">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3>Abril ⚠️</h3>
+          <span class="badge badge-red">▼ Déficit</span>
+        </div>
+        <div class="month-stat"><span>Ingresos</span><span style="color:#166534">$22,246,135</span></div>
+        <div class="month-stat"><span>Costos</span><span>$10,057,416</span></div>
+        <div class="month-stat"><span>Gastos</span><span>$14,418,381</span></div>
+        <div class="sep" style="margin:10px 0"></div>
+        <div class="month-stat"><span><strong>Utilidad</strong></span><span style="color:var(--red);font-family:'DM Mono',monospace"><strong>-$2,229,662</strong></span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">Margen: -10.0%</div>
+      </div>
+      <div class="month-card m-ok">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3>Mayo</h3>
+          <span class="badge badge-green">▲ Superávit</span>
+        </div>
+        <div class="month-stat"><span>Ingresos</span><span style="color:#166534">$22,142,049</span></div>
+        <div class="month-stat"><span>Costos</span><span>$4,170,910</span></div>
+        <div class="month-stat"><span>Gastos</span><span>$15,698,986</span></div>
+        <div class="sep" style="margin:10px 0"></div>
+        <div class="month-stat"><span><strong>Utilidad</strong></span><span style="color:#166534;font-family:'DM Mono',monospace"><strong>+$2,272,153</strong></span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">Margen: 10.3%</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nómina por mes (variación)</div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="chartNomina" role="img" aria-label="Nómina por mes"></canvas>
+      </div>
+      <div class="alert alert-warning" style="margin-top:16px">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text"><strong>Variación nómina alta</strong>La nómina pasó de $2.4M en marzo a $4.7M en mayo (+95%). Revisar si incluye pagos extraordinarios, anticipos o errores de clasificación.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">¿Por qué Abril fue deficitario?</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Los costos directos en abril se triplicaron respecto al promedio:</p>
+      <div class="bar-row"><div class="bar-label">Costos Marzo</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:#2a4d3e"></div></div><div class="bar-val">$3.5M</div></div>
+      <div class="bar-row"><div class="bar-label">Costos Abril</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:#c0392b"></div></div><div class="bar-val">$10.1M</div></div>
+      <div class="bar-row"><div class="bar-label">Costos Mayo</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:#2a4d3e"></div></div><div class="bar-val">$4.2M</div></div>
+      <div class="sep"></div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7">
+        <p>➤ Cta. por cobrar Giovanny en abril: <strong style="color:var(--red)">$3.27M</strong> (solo ese mes)</p>
+        <p>➤ "COSTO" sin nombre en abril: <strong style="color:var(--red)">$2.73M</strong></p>
+        <p>➤ Nómina en abril: <strong style="color:var(--amber)">$4.44M</strong> vs $2.4M en marzo</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COSTOS ===== -->
+  <div class="page" id="page-costos">
+    <div class="page-header">
+      <h2>Costos y gastos</h2>
+      <p>Desglose detallado de egresos del período</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="mc-label">02. Costos directos</div>
+        <div class="mc-value mc-dark">$17.76M</div>
+        <div class="mc-sub">30.5% del egreso total</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">03. Gastos operativos</div>
+        <div class="mc-value mc-dark">$40.45M</div>
+        <div class="mc-sub">69.5% del egreso total</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Nómina (en gastos)</div>
+        <div class="mc-value mc-amber">$11.15M</div>
+        <div class="mc-sub">27.6% de los gastos</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Gastos no trazables</div>
+        <div class="mc-value mc-red">$3.99M</div>
+        <div class="mc-sub">Sin identificar + genéricos</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Top 15 — Egresos por concepto</div>
+      <div id="topCostosBars"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Gastos operativos destacados</div>
+        <table class="data-table">
+          <thead><tr><th>Concepto</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            <tr><td>Nómina</td><td class="amt">$11,146,000</td></tr>
+            <tr><td>Cta. cobrar Giovanny</td><td class="amt neg">$8,628,587</td></tr>
+            <tr><td>Salida (retiros caja)</td><td class="amt">$4,446,100</td></tr>
+            <tr><td>Sin identificar</td><td class="amt neg">$2,348,943</td></tr>
+            <tr><td>Gastos varios</td><td class="amt neg">$1,641,900</td></tr>
+            <tr><td>Gastos bancarios</td><td class="amt">$265,929</td></tr>
+            <tr><td>Gasto perros</td><td class="amt">$562,000</td></tr>
+            <tr><td>Gasto pollos</td><td class="amt">$601,900</td></tr>
+            <tr><td>Combustible</td><td class="amt">$817,926</td></tr>
+            <tr><td>Internet + teléfono</td><td class="amt">$539,690</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Costos directos por persona</div>
+        <table class="data-table">
+          <thead><tr><th>Empleado/Concepto</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            <tr><td>Costo Marcela</td><td class="amt">$5,561,647</td></tr>
+            <tr><td>Costo (sin nombre)</td><td class="amt neg">$3,213,000</td></tr>
+            <tr><td>Costo Claudia</td><td class="amt">$1,793,470</td></tr>
+            <tr><td>Costo Paola</td><td class="amt">$1,302,230</td></tr>
+            <tr><td>Costo Jimena</td><td class="amt">$1,094,100</td></tr>
+            <tr><td>Costo Rosa</td><td class="amt">$961,433</td></tr>
+            <tr><td>Costo Erika</td><td class="amt">$942,490</td></tr>
+            <tr><td>Costo Rafael</td><td class="amt">$941,800</td></tr>
+            <tr><td>Costo Suneidy</td><td class="amt">$923,567</td></tr>
+            <tr><td>Costo Stefanny</td><td class="amt">$860,320</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INGRESOS ===== -->
+  <div class="page" id="page-ingresos">
+    <div class="page-header">
+      <h2>Ingresos</h2>
+      <p>Análisis de las fuentes de ingreso del período</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="mc-label">Ingreso taller</div>
+        <div class="mc-value mc-green">$58.4M</div>
+        <div class="mc-sub">92.6% del total</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Ingreso Jimena</div>
+        <div class="mc-value mc-dark">$2.25M</div>
+        <div class="mc-sub">3.6% del total</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Ingreso pollos</div>
+        <div class="mc-value mc-dark">$1.05M</div>
+        <div class="mc-sub">1.7% del total</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Cta. pagar Brayam</div>
+        <div class="mc-value mc-dark">$1.35M</div>
+        <div class="mc-sub">2.1% del total</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Distribución de fuentes de ingreso</div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="chartIngresosPie" role="img" aria-label="Distribución de ingresos por fuente"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ingresos taller por mes</div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="chartIngTaller" role="img" aria-label="Ingresos taller por mes"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Negocio de pollos — resultado por mes</div>
+      <div class="pollos-grid">
+        <div class="metric-card">
+          <div class="mc-label">Marzo pollos</div>
+          <div class="mc-value mc-red">-$7,900</div>
+          <div class="mc-sub">Ing $291K · Gasto $299K</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Abril pollos</div>
+          <div class="mc-value mc-green">+$73,000</div>
+          <div class="mc-sub">Ing $244K · Gasto $171K</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Mayo pollos</div>
+          <div class="mc-value mc-green">+$327,000</div>
+          <div class="mc-sub">Ing $511K · Gasto $184K</div>
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-top:16px">
+        <div class="alert-icon">ℹ️</div>
+        <div class="alert-text"><strong>El negocio de pollos muestra tendencia positiva</strong>Pasó de déficit en marzo a una utilidad de $327K en mayo. Representa solo el 1.7% de los ingresos pero con tendencia creciente.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CARTERA ===== -->
+  <div class="page" id="page-cartera">
+    <div class="page-header">
+      <h2>Cartera por cobrar</h2>
+      <p>Deudores activos al cierre del período</p>
+    </div>
+
+    <div class="alert alert-danger">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text"><strong>$10.7M en cartera pendiente (17% de ingresos)</strong>Si esta cartera no se recupera, la utilidad del trimestre se convierte en pérdida neta de -$5.87M. Requiere gestión urgente de cobro.</div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Deudores — saldo pendiente</div>
+      <div id="carteraBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Detalle de cuentas por cobrar</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>Deudor</th><th style="text-align:right">Saldo pendiente</th><th style="text-align:right">% del total</th><th>Riesgo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Giovanny</td><td class="amt neg">$8,628,587</td><td class="amt">80.7%</td><td><span class="badge badge-red">Alto</span></td></tr>
+          <tr><td>2</td><td>Boggu</td><td class="amt">$472,000</td><td class="amt">4.4%</td><td><span class="badge badge-red">Medio</span></td></tr>
+          <tr><td>3</td><td>Franklin</td><td class="amt">$427,700</td><td class="amt">4.0%</td><td><span class="badge badge-red">Medio</span></td></tr>
+          <tr><td>4</td><td>Nicolás</td><td class="amt">$244,088</td><td class="amt">2.3%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>5</td><td>Castillo</td><td class="amt">$219,500</td><td class="amt">2.1%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>6</td><td>Nubia</td><td class="amt">$200,000</td><td class="amt">1.9%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>7</td><td>Wilson</td><td class="amt">$134,000</td><td class="amt">1.3%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>8</td><td>Alexis</td><td class="amt">$118,000</td><td class="amt">1.1%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>9</td><td>Freddy</td><td class="amt">$70,000</td><td class="amt">0.7%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>10</td><td>Yoneiker</td><td class="amt">$65,000</td><td class="amt">0.6%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>11</td><td>Jaseth</td><td class="amt">$60,000</td><td class="amt">0.6%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>12</td><td>Eduardo</td><td class="amt">$50,000</td><td class="amt">0.5%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr><td>13</td><td>Alejandro</td><td class="amt">$15,000</td><td class="amt">0.1%</td><td><span class="badge" style="background:#dcfce7;color:#166534">Bajo</span></td></tr>
+          <tr style="font-weight:600"><td colspan="2"><strong>TOTAL</strong></td><td class="amt neg">$10,703,875</td><td class="amt">100%</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== TRANSACCIONES ===== -->
+  <div class="page" id="page-transacciones">
+    <div class="page-header">
+      <h2>Transacciones</h2>
+      <p>Registro completo del período — filtrable por mes y tipo</p>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <div class="month-tabs" style="margin-bottom:0">
+        <button class="tab-btn active" onclick="filterTx('todos',this)">Todos</button>
+        <button class="tab-btn" onclick="filterTx('MARZO',this)">Marzo</button>
+        <button class="tab-btn" onclick="filterTx('ABRIL',this)">Abril</button>
+        <button class="tab-btn" onclick="filterTx('MAYO',this)">Mayo</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="tab-btn" onclick="filterTxTipo('todos',this)" style="background:var(--bg3)" id="tiptodos">Todos</button>
+        <button class="tab-btn" onclick="filterTxTipo('01. INGRESOS',this)" id="tip01">Ingresos</button>
+        <button class="tab-btn" onclick="filterTxTipo('02. COSTOS',this)" id="tip02">Costos</button>
+        <button class="tab-btn" onclick="filterTxTipo('03. GASTOS',this)" id="tip03">Gastos</button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar por nombre, concepto..." id="txSearch" oninput="renderTx()">
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Tipo</th>
+              <th>Nombre</th>
+              <th>Concepto</th>
+              <th>Medio</th>
+              <th style="text-align:right">Entrada</th>
+              <th style="text-align:right">Salida</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 16px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);display:flex;justify-content:space-between" id="txInfo">
+        <span id="txCount"></span>
+        <div style="display:flex;gap:8px">
+          <button class="tab-btn" style="padding:4px 12px;font-size:11px" onclick="txPage(-1)">‹ Anterior</button>
+          <span id="txPageInfo" style="font-size:12px;padding:4px 8px;color:var(--text2)"></span>
+          <button class="tab-btn" style="padding:4px 12px;font-size:11px" onclick="txPage(1)">Siguiente ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ALERTAS ===== -->
+  <div class="page" id="page-alertas">
+    <div class="page-header">
+      <h2>Alertas contables</h2>
+      <p>Hallazgos críticos y recomendaciones para mejorar el control financiero</p>
+    </div>
+
+    <div class="alert alert-danger">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text">
+        <strong>1. Abril cierra en déficit de $2.23M</strong>
+        Los costos directos se triplicaron en abril ($10.1M vs $3.5M en marzo). Concentración anómala en "Cta. por cobrar Giovanny" con $3.27M solo ese mes, más $2.73M en "COSTO" sin identificar. Se recomienda investigar el origen de estos registros.
+      </div>
+    </div>
+
+    <div class="alert alert-danger">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text">
+        <strong>2. Cartera de $10.7M con alto riesgo de incobrabilidad</strong>
+        El 80.7% de la cartera está concentrada en una sola persona (Giovanny: $8.63M). Si esta cartera no se recupera, la empresa registraría pérdida neta. Iniciar gestión de cobro inmediata y evaluar provisión de cartera.
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>3. $3.99M en gastos sin trazabilidad</strong>
+        $2.35M en categoría "SIN IDENTIFICAR" y $1.64M en "GASTOS" sin descripción. Esto representa el 6.9% del egreso total y puede generar problemas ante una revisión de la DIAN o auditoría interna.
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>4. Duplicación de categorías por espacios en blanco</strong>
+        Existen registros "COSTO", "COSTO " y "COSTO  " (con 1 y 2 espacios) que suman $3.81M. Esto genera informes inconsistentes y dificulta la consolidación contable. Estandarizar el catálogo de conceptos.
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>5. Nómina con variación del 95% entre meses</strong>
+        La nómina oscila entre $2.4M (marzo) y $4.7M (mayo). Revisar si incluye anticipos, prestaciones, horas extras o si hay errores de clasificación. Una nómina irregular sin justificación genera señales de alerta fiscal.
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>6. Gastos personales registrados como gastos empresariales</strong>
+        Se identificaron conceptos como "COMIDA GIO", "ZAPATOS MAI", "CORTE DE PELO", "COMPRA DE AZÚCAR GASTO CASA", "INTERNET CASA". Estos gastos personales deducidos como empresariales pueden generar sanciones ante la DIAN.
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-text">
+        <strong>7. Alta proporción de efectivo (42% del flujo)</strong>
+        Manejar el 42% del flujo en efectivo dificulta la trazabilidad y puede ser cuestionado por la autoridad tributaria. Recomendar bancarizar el mayor número de transacciones posible.
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-text">
+        <strong>8. Margen neto ajustado del 7.7%</strong>
+        El margen es positivo pero bajo para el sector. Con la cartera recuperada y los gastos personales depurados, el margen real podría ser superior. Se recomienda implementar presupuesto mensual para mantener costos bajo control.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:8px">
+      <div class="card-title">Plan de acción recomendado</div>
+      <table class="data-table">
+        <thead><tr><th>Prioridad</th><th>Acción</th><th>Impacto</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-red">Urgente</span></td><td>Gestionar cobro de cartera Giovanny ($8.63M)</td><td>Recuperar utilidad real</td></tr>
+          <tr><td><span class="badge badge-red">Urgente</span></td><td>Identificar y documentar los $3.99M sin clasificar</td><td>Evitar sanción DIAN</td></tr>
+          <tr><td><span class="badge" style="background:#fef3c7;color:#b45309">Media</span></td><td>Separar gastos personales de los empresariales</td><td>Cumplimiento fiscal</td></tr>
+          <tr><td><span class="badge" style="background:#fef3c7;color:#b45309">Media</span></td><td>Estandarizar catálogo de conceptos contables</td><td>Reportes precisos</td></tr>
+          <tr><td><span class="badge" style="background:#dcfce7;color:#166534">Normal</span></td><td>Implementar presupuesto mensual de costos</td><td>Control financiero</td></tr>
+          <tr><td><span class="badge" style="background:#dcfce7;color:#166534">Normal</span></td><td>Bancarizar más transacciones (reducir efectivo)</td><td>Trazabilidad fiscal</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ===== DATA =====
+const txData = [
+  {mes:'MARZO',tipo:'01. INGRESOS',nombre:'INGRESO TALLER',concepto:'Arreglos y trabajos taller',medio:'BANCOLOMBIA',entrada:18126070,salida:0},
+  {mes:'MARZO',tipo:'01. INGRESOS',nombre:'INGRESOS POLLOS',concepto:'Venta de pollos',medio:'EFECTIVO',entrada:291000,salida:0},
+  {mes:'MARZO',tipo:'01. INGRESOS',nombre:'INGRESOS BANCARIOS',concepto:'Rendimientos bancarios',medio:'BANCOLOMBIA',entrada:63,salida:0},
+  {mes:'MARZO',tipo:'01. INGRESOS',nombre:'INGRESO JIMENA',concepto:'Servicios Jimena',medio:'EFECTIVO',entrada:539000,salida:0},
+  {mes:'MARZO',tipo:'02. COSTOS',nombre:'COSTO MARCELA',concepto:'Materiales y mano de obra',medio:'BANCOLOMBIA',entrada:0,salida:1228000},
+  {mes:'MARZO',tipo:'02. COSTOS',nombre:'COSTO MIREYA',concepto:'Trabajo Mireya',medio:'BANCOLOMBIA',entrada:0,salida:767300},
+  {mes:'MARZO',tipo:'02. COSTOS',nombre:'COSTO CLAUDIA',concepto:'Trabajo Claudia',medio:'BANCOLOMBIA',entrada:0,salida:580000},
+  {mes:'MARZO',tipo:'02. COSTOS',nombre:'COSTO PAOLA',concepto:'Trabajo Paola',medio:'BANCOLOMBIA',entrada:0,salida:488000},
+  {mes:'MARZO',tipo:'02. COSTOS',nombre:'COSTO ARAQUE',concepto:'Trabajo Araque',medio:'BANCOLOMBIA',entrada:0,salida:44000},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'NOMINA',concepto:'Pago nómina empleados',medio:'EFECTIVO',entrada:0,salida:2425000},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'CUENTA POR COBRAR GIOVANNY',concepto:'Varios Giovanny',medio:'BANCOLOMBIA',entrada:0,salida:1285287},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'GASTOS BANCARIOS',concepto:'Comisiones y cargos',medio:'BANCOLOMBIA',entrada:0,salida:101745},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'GASTO POLLOS',concepto:'Gastos negocio pollos',medio:'EFECTIVO',entrada:0,salida:298900},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'GASTO PERROS',concepto:'Alimento y cuidado',medio:'EFECTIVO',entrada:0,salida:105000},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'COMBUSTIBLE',concepto:'Gasolina vehículos',medio:'BANCOLOMBIA',entrada:0,salida:250000},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'GASTOS INTERNET',concepto:'Servicio de internet',medio:'BANCOLOMBIA',entrada:0,salida:100000},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'GASTOS',concepto:'Gastos operativos varios',medio:'EFECTIVO',entrada:0,salida:607545},
+  {mes:'MARZO',tipo:'03. GASTOS',nombre:'SALIDA ',concepto:'Retiros de caja',medio:'BANCOLOMBIA',entrada:0,salida:1020100},
+  {mes:'ABRIL',tipo:'01. INGRESOS',nombre:'INGRESO TALLER',concepto:'Arreglos y trabajos taller',medio:'BANCOLOMBIA',entrada:21000000,salida:0},
+  {mes:'ABRIL',tipo:'01. INGRESOS',nombre:'INGRESOS POLLOS',concepto:'Venta de pollos',medio:'EFECTIVO',entrada:244000,salida:0},
+  {mes:'ABRIL',tipo:'01. INGRESOS',nombre:'INGRESO JIMENA',concepto:'Servicios Jimena',medio:'EFECTIVO',entrada:1001000,salida:0},
+  {mes:'ABRIL',tipo:'01. INGRESOS',nombre:'CUENTA POR PAGAR BRAYAM',concepto:'Abono Brayam',medio:'EFECTIVO',entrada:1000000,salida:0},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO MARCELA',concepto:'Materiales y mano de obra',medio:'BANCOLOMBIA',entrada:0,salida:2550000},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO ROSA',concepto:'Trabajo Rosa',medio:'BANCOLOMBIA',entrada:0,salida:961433},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO SUNEIDY',concepto:'Trabajo Suneidy',medio:'BANCOLOMBIA',entrada:0,salida:923567},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO',concepto:'Materiales sin clasificar',medio:'BANCOLOMBIA',entrada:0,salida:2728200},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO CLAUDIA',concepto:'Trabajo Claudia',medio:'BANCOLOMBIA',entrada:0,salida:775850},
+  {mes:'ABRIL',tipo:'02. COSTOS',nombre:'COSTO PAOLA',concepto:'Trabajo Paola',medio:'BANCOLOMBIA',entrada:0,salida:1155230},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'NOMINA',concepto:'Pago nómina empleados',medio:'EFECTIVO',entrada:0,salida:4436000},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'CUENTA POR COBRAR GIOVANNY',concepto:'Varios Giovanny',medio:'BANCOLOMBIA',entrada:0,salida:3269560},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'SALIDA ',concepto:'Retiros de caja',medio:'BANCOLOMBIA',entrada:0,salida:1433000},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'CUENTA POR PAGAR BRAYAM',concepto:'Devolución Brayam',medio:'EFECTIVO',entrada:0,salida:682500},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'GASTOS',concepto:'Gastos operativos varios',medio:'EFECTIVO',entrada:0,salida:850000},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'GASTO POLLOS',concepto:'Gastos negocio pollos',medio:'EFECTIVO',entrada:0,salida:171000},
+  {mes:'ABRIL',tipo:'03. GASTOS',nombre:'COMBUSTIBLE',concepto:'Gasolina vehículos',medio:'BANCOLOMBIA',entrada:0,salida:350000},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'INGRESO TALLER',concepto:'Arreglos y trabajos taller',medio:'BANCOLOMBIA',entrada:19271930,salida:0},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'INGRESOS POLLOS',concepto:'Venta de pollos',medio:'EFECTIVO',entrada:511000,salida:0},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'INGRESO JIMENA',concepto:'Servicios Jimena',medio:'EFECTIVO',entrada:710000,salida:0},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'CUENTA POR PAGAR BRAYAM',concepto:'Abono Brayam',medio:'EFECTIVO',entrada:350000,salida:0},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'INGRESO KEIDY',concepto:'Ingreso Keidy',medio:'EFECTIVO',entrada:300000,salida:0},
+  {mes:'MAYO',tipo:'01. INGRESOS',nombre:'INGRESOS BANCARIOS',concepto:'Rendimientos',medio:'BANCOLOMBIA',entrada:191,salida:0},
+  {mes:'MAYO',tipo:'02. COSTOS',nombre:'COSTO JIMENA',concepto:'Trabajo Jimena',medio:'EFECTIVO',entrada:0,salida:614100},
+  {mes:'MAYO',tipo:'02. COSTOS',nombre:'COSTO STEFANNY',concepto:'Trabajo Stefanny',medio:'BANCOLOMBIA',entrada:0,salida:860320},
+  {mes:'MAYO',tipo:'02. COSTOS',nombre:'COSTO ERIKA',concepto:'Trabajo Erika',medio:'BANCOLOMBIA',entrada:0,salida:942490},
+  {mes:'MAYO',tipo:'02. COSTOS',nombre:'COSTO RAFAEL',concepto:'Trabajo Rafael',medio:'BANCOLOMBIA',entrada:0,salida:941800},
+  {mes:'MAYO',tipo:'02. COSTOS',nombre:'COSTO LEIDY',concepto:'Trabajo Leidy',medio:'BANCOLOMBIA',entrada:0,salida:55000},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'NOMINA',concepto:'Pago nómina empleados',medio:'EFECTIVO',entrada:0,salida:4695000},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'CUENTA POR COBRAR GIOVANNY',concepto:'Varios Giovanny',medio:'BANCOLOMBIA',entrada:0,salida:4073740},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'SALIDA ',concepto:'Retiros de caja',medio:'BANCOLOMBIA',entrada:0,salida:1993000},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'GASTOS',concepto:'Gastos operativos varios',medio:'EFECTIVO',entrada:0,salida:184355},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'SIN IDENTIFICAR',concepto:'Movimientos sin clasificar',medio:'BANCOLOMBIA',entrada:0,salida:2348943},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'GASTO POLLOS',concepto:'Gastos negocio pollos',medio:'EFECTIVO',entrada:0,salida:184000},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'GASTOS TELEFONO',concepto:'Telefonía móvil e internet',medio:'BANCOLOMBIA',entrada:0,salida:339690},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'GASTOS GAS',concepto:'Servicio de gas',medio:'BANCOLOMBIA',entrada:0,salida:238770},
+  {mes:'MAYO',tipo:'03. GASTOS',nombre:'GASTOS CONTADOR ',concepto:'Honorarios contador',medio:'BANCOLOMBIA',entrada:0,salida:400000},
+];
+
+let currentMesFiltro = 'todos';
+let currentTipoFiltro = 'todos';
+let currentPage = 0;
+const PAGE_SIZE = 15;
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-CO');
+}
+
+// ===== NAVIGATION =====
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'transacciones') { currentPage = 0; renderTx(); }
+  if (name === 'cartera') renderCartera();
+  if (name === 'costos') renderTopCostos();
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ===== TRANSACCIONES =====
+function filterTx(mes, btn) {
+  currentMesFiltro = mes;
+  currentPage = 0;
+  document.querySelectorAll('.month-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTx();
+}
+
+function filterTxTipo(tipo, btn) {
+  currentTipoFiltro = tipo;
+  currentPage = 0;
+  ['tiptodos','tip01','tip02','tip03'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTx();
+}
+
+function txPage(dir) {
+  const filtered = getFiltered();
+  const pages = Math.ceil(filtered.length / PAGE_SIZE);
+  currentPage = Math.max(0, Math.min(pages - 1, currentPage + dir));
+  renderTx();
+}
+
+function getFiltered() {
+  const q = (document.getElementById('txSearch')?.value || '').toLowerCase();
+  return txData.filter(r => {
+    if (currentMesFiltro !== 'todos' && r.mes !== currentMesFiltro) return false;
+    if (currentTipoFiltro !== 'todos' && r.tipo !== currentTipoFiltro) return false;
+    if (q && !r.nombre.toLowerCase().includes(q) && !r.concepto.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderTx() {
+  const filtered = getFiltered();
+  const pages = Math.ceil(filtered.length / PAGE_SIZE);
+  const slice = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  const tbody = document.getElementById('txBody');
+  if (!tbody) return;
+  tbody.innerHTML = slice.map(r => {
+    const mesColor = r.mes === 'MARZO' ? '#166534' : r.mes === 'ABRIL' ? '#c0392b' : '#1e4da1';
+    const tipoLabel = r.tipo === '01. INGRESOS' ? '💰 Ingreso' : r.tipo === '02. COSTOS' ? '⚙️ Costo' : '📤 Gasto';
+    return `<tr>
+      <td><span style="font-size:11px;font-weight:600;color:${mesColor}">${r.mes}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${tipoLabel}</td>
+      <td style="font-weight:500">${r.nombre}</td>
+      <td style="color:var(--text2);font-size:12px">${r.concepto}</td>
+      <td style="font-size:12px;color:var(--text3)">${r.medio}</td>
+      <td class="amt pos">${r.entrada > 0 ? fmt(r.entrada) : '—'}</td>
+      <td class="amt neg">${r.salida > 0 ? fmt(r.salida) : '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('txCount').textContent = filtered.length + ' transacciones';
+  document.getElementById('txPageInfo').textContent = `Página ${currentPage+1} de ${Math.max(1,pages)}`;
+}
+
+// ===== CARTERA BARS =====
+function renderCartera() {
+  const deudores = [
+    {n:'Giovanny',v:8628587},
+    {n:'Boggu',v:472000},
+    {n:'Franklin',v:427700},
+    {n:'Nicolás',v:244088},
+    {n:'Castillo',v:219500},
+    {n:'Nubia',v:200000},
+    {n:'Wilson',v:134000},
+    {n:'Alexis',v:118000},
+    {n:'Freddy',v:70000},
+    {n:'Yoneiker',v:65000},
+  ];
+  const max = deudores[0].v;
+  document.getElementById('carteraBars').innerHTML = deudores.map(d => {
+    const pct = (d.v / max * 100).toFixed(0);
+    const color = d.v > 1000000 ? '#c0392b' : d.v > 300000 ? '#b45309' : '#2a4d3e';
+    return `<div class="bar-row">
+      <div class="bar-label">${d.n}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="bar-val">${fmt(d.v)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== TOP COSTOS BARS =====
+function renderTopCostos() {
+  const items = [
+    {n:'Nómina',v:11146000},
+    {n:'Cta. cobrar Giovanny',v:8628587},
+    {n:'Costo Marcela',v:5561647},
+    {n:'Salida (retiros)',v:4446100},
+    {n:'Costo (sin nombre)',v:3213000},
+    {n:'Sin identificar',v:2348943},
+    {n:'Costo Claudia',v:1793470},
+    {n:'Gastos varios',v:1641900},
+    {n:'Costo Paola',v:1302230},
+    {n:'Costo Jimena',v:1094100},
+    {n:'Costo Rosa',v:961433},
+    {n:'Costo Erika',v:942490},
+    {n:'Costo Rafael',v:941800},
+    {n:'Costo Suneidy',v:923567},
+    {n:'Costo Stefanny',v:860320},
+  ];
+  const max = items[0].v;
+  const colors = ['#2a4d3e','#3d7a5f','#2a4d3e','#b45309','#c0392b','#c0392b','#2a4d3e','#c0392b','#3d7a5f','#2a4d3e','#3d7a5f','#3d7a5f','#3d7a5f','#3d7a5f','#3d7a5f'];
+  document.getElementById('topCostosBars').innerHTML = items.map((d,i) => {
+    const pct = (d.v / max * 95).toFixed(0);
+    return `<div class="bar-row">
+      <div class="bar-label">${d.n}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+      <div class="bar-val">${fmt(d.v)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== CHARTS =====
+function initCharts() {
+  const gridColor = 'rgba(0,0,0,0.06)';
+  const txtColor = '#6b6860';
+
+  new Chart(document.getElementById('chartResumen'), {
+    type: 'bar',
+    data: {
+      labels: ['Marzo','Abril','Mayo'],
+      datasets: [
+        {label:'Ingresos', data:[18956070,22246135,22142049], backgroundColor:'#3d7a5f', borderRadius:6, borderSkipped:false},
+        {label:'Egresos', data:[14494049,24475797,19869896], backgroundColor:'#c0392b', borderRadius:6, borderSkipped:false}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:txtColor,font:{size:12,family:'DM Sans'}},grid:{color:gridColor}},
+        y:{ticks:{color:txtColor,font:{size:11,family:'DM Mono'},callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:gridColor}}
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartComposicion'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Costos directos','Nómina','Otros gastos'],
+      datasets: [{data:[17759906,11146000,29304034], backgroundColor:['#2a4d3e','#b45309','#9b59b6'], borderWidth:0, hoverOffset:8}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      cutout:'65%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': $'+(ctx.raw/1e6).toFixed(2)+'M'}}}
+    }
+  });
+
+  new Chart(document.getElementById('chartUtilidad'), {
+    type: 'bar',
+    data: {
+      labels: ['Marzo','Abril','Mayo'],
+      datasets: [{
+        label:'Utilidad',
+        data:[4462021,-2229662,2272153],
+        backgroundColor:['#3d7a5f','#c0392b','#3d7a5f'],
+        borderRadius:6, borderSkipped:false
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:txtColor,font:{size:12,family:'DM Sans'}},grid:{color:gridColor}},
+        y:{ticks:{color:txtColor,font:{size:11,family:'DM Mono'},callback:v=>'$'+(v/1e6).toFixed(2)+'M'},grid:{color:gridColor}}
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartNomina'), {
+    type: 'line',
+    data: {
+      labels: ['Marzo','Abril','Mayo'],
+      datasets: [{
+        label:'Nómina',
+        data:[2425000,4436000,4695000],
+        borderColor:'#b45309', backgroundColor:'rgba(180,83,9,0.1)',
+        tension:0.4, fill:true, pointRadius:6, pointBackgroundColor:'#b45309'
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:txtColor},grid:{color:gridColor}},
+        y:{ticks:{color:txtColor,callback:v=>'$'+(v/1e6).toFixed(2)+'M'},grid:{color:gridColor}}
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartIngresosPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Ingreso Taller','Ingreso Jimena','Pollos','Cta. pagar Brayam','Otros'],
+      datasets: [{data:[58398000,2250000,1046000,1350000,254], backgroundColor:['#2a4d3e','#3d7a5f','#6aaa84','#b45309','#9b59b6'], borderWidth:0}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11},color:txtColor,padding:12}}}
+    }
+  });
+
+  new Chart(document.getElementById('chartIngTaller'), {
+    type: 'bar',
+    data: {
+      labels: ['Marzo','Abril','Mayo'],
+      datasets: [{label:'Ingreso taller', data:[18126070,21000000,19271930], backgroundColor:'#3d7a5f', borderRadius:6, borderSkipped:false}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:txtColor,font:{size:12}},grid:{color:gridColor}},
+        y:{ticks:{color:txtColor,callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:gridColor}}
+      }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  renderTx();
+  renderCartera();
+  renderTopCostos();
+});
+</script>
+</body>
+</html>
